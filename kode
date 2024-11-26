@@ -1,0 +1,75 @@
+import pygame
+import sys
+
+# Константы
+WIDTH, HEIGHT = 300, 300
+CELL_SIZE = WIDTH // 3
+LINE_WIDTH = 5
+CIRCLE_RADIUS = CELL_SIZE // 3
+CIRCLE_WIDTH, CROSS_WIDTH = 5, 10
+WHITE, BLACK, RED, BLUE = (255, 255, 255), (0, 0, 0), (255, 0, 0), (0, 0, 255)
+
+# Инициализация Pygame
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Крестики-нолики")
+screen.fill(WHITE)
+
+# Сетка и начальные значения
+board = [[" " for _ in range(3)] for _ in range(3)]
+player = "X"
+game_over = False
+
+def draw_grid():
+    for i in range(1, 3):
+        pygame.draw.line(screen, BLACK, (CELL_SIZE * i, 0), (CELL_SIZE * i, HEIGHT), LINE_WIDTH)
+        pygame.draw.line(screen, BLACK, (0, CELL_SIZE * i), (WIDTH, CELL_SIZE * i), LINE_WIDTH)
+
+def draw_figures():
+    for row in range(3):
+        for col in range(3):
+            center = (col * CELL_SIZE + CELL_SIZE // 2, row * CELL_SIZE + CELL_SIZE // 2)
+            if board[row][col] == "O":
+                pygame.draw.circle(screen, BLUE, center, CIRCLE_RADIUS, CIRCLE_WIDTH)
+            elif board[row][col] == "X":
+                start1, end1 = (col * CELL_SIZE + 15, row * CELL_SIZE + 15), (col * CELL_SIZE + CELL_SIZE - 15, row * CELL_SIZE + CELL_SIZE - 15)
+                start2, end2 = (col * CELL_SIZE + 15, row * CELL_SIZE + CELL_SIZE - 15), (col * CELL_SIZE + CELL_SIZE - 15, row * CELL_SIZE + 15)
+                pygame.draw.line(screen, RED, start1, end1, CROSS_WIDTH)
+                pygame.draw.line(screen, RED, start2, end2, CROSS_WIDTH)
+
+def check_winner():
+    for i in range(3):
+        if board[i][0] == board[i][1] == board[i][2] and board[i][0] != " ": return board[i][0]
+        if board[0][i] == board[1][i] == board[2][i] and board[0][i] != " ": return board[0][i]
+    if board[0][0] == board[1][1] == board[2][2] and board[0][0] != " ": return board[0][0]
+    if board[0][2] == board[1][1] == board[2][0] and board[0][2] != " ": return board[0][2]
+    if all(board[row][col] != " " for row in range(3) for col in range(3)): return "Draw"
+    return None
+
+def restart_game():
+    global board, player, game_over
+    board = [[" " for _ in range(3)] for _ in range(3)]
+    player, game_over = "X", False
+    screen.fill(WHITE)
+    draw_grid()
+
+# Основной цикл игры
+draw_grid()
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+            x, y = event.pos[0] // CELL_SIZE, event.pos[1] // CELL_SIZE
+            if board[y][x] == " ":
+                board[y][x], player = player, "O" if player == "X" else "X"
+                winner = check_winner()
+                if winner:
+                    game_over = True
+                    print(f"Победитель: {winner}" if winner != "Draw" else "Ничья!")
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+            restart_game()
+
+    draw_figures()
+    pygame.display.update()
